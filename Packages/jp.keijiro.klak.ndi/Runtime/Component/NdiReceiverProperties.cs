@@ -1,59 +1,68 @@
 using UnityEngine;
 
-namespace Klak.Ndi {
-
-public sealed partial class NdiReceiver : MonoBehaviour
+namespace Klak.Ndi
 {
-    #region NDI source settings
 
-    [SerializeField] string _ndiName = null;
+    public sealed partial class NdiReceiver : MonoBehaviour
+    {
+        #region NDI source settings
 
-    public string ndiName
-      { get => _ndiName;
-        set { _ndiName = value; Restart(); } }
+        [SerializeField] string _ndiName = null;
 
-    #endregion
+        public string ndiName
+        {
+            get => _ndiName;
+            set { _ndiName = value; Restart(); }
+        }
 
-    #region Target settings
+        #endregion
 
-    [SerializeField] RenderTexture _targetTexture = null;
+        #region Target settings
 
-    public RenderTexture targetTexture
-      { get => _targetTexture;
-        set => _targetTexture = value; }
+        [SerializeField] RenderTexture _targetTexture = null;
 
-    [SerializeField] Renderer _targetRenderer = null;
+        public RenderTexture targetTexture
+        {
+            get => _targetTexture;
+            set => _targetTexture = value;
+        }
 
-    public Renderer targetRenderer
-      { get => _targetRenderer;
-        set => _targetRenderer = value; }
+        [SerializeField] Renderer _targetRenderer = null;
 
-    [SerializeField] string _targetMaterialProperty = null;
+        public Renderer targetRenderer
+        {
+            get => _targetRenderer;
+            set => _targetRenderer = value;
+        }
 
-    public string targetMaterialProperty
-      { get => _targetMaterialProperty;
-        set => _targetMaterialProperty = value; }
+        [SerializeField] string _targetMaterialProperty = null;
 
-    #endregion
+        public string targetMaterialProperty
+        {
+            get => _targetMaterialProperty;
+            set => _targetMaterialProperty = value;
+        }
 
-    #region Runtime property
+        #endregion
 
-    public RenderTexture texture => _converter?.LastDecoderOutput;
+        #region Runtime property
 
-    public string metadata { get; set; }
+        public RenderTexture texture => _converter?.LastDecoderOutput;
 
-    public Interop.Recv internalRecvObject => _recv;
+        public string metadata { get; set; }
 
-    #endregion
+        public Interop.Recv internalRecvObject => _recv;
 
-    #region Resources asset reference
+        #endregion
 
-    [SerializeField, HideInInspector] NdiResources _resources = null;
+        #region Resources asset reference
 
-    public void SetResources(NdiResources resources)
-      => _resources = resources;
+        [SerializeField, HideInInspector] NdiResources _resources = null;
 
-    #endregion
-}
+        public void SetResources(NdiResources resources)
+          => _resources = resources;
+
+        #endregion
+    }
 
 }

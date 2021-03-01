@@ -37,7 +37,7 @@ class SenderBenchmark : MonoBehaviour
 
     GameObject CreateInstance(int index)
     {
-        var components = new [] { typeof(Camera), typeof(NdiSender) };
+        var components = new[] { typeof(Camera), typeof(NdiSender) };
 
         var go = new GameObject($"Sender {index}", components);
 

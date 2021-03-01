@@ -37,7 +37,7 @@ class ReceiverBenchmark : MonoBehaviour
 
     GameObject CreateInstance(int index)
     {
-        var components = new []
+        var components = new[]
             { typeof(MeshFilter), typeof(MeshRenderer), typeof(NdiReceiver) };
 
         var go = new GameObject($"Receiver {index}", components);

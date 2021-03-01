@@ -2,88 +2,89 @@ using System;
 using System.Runtime.InteropServices;
 using Microsoft.Win32.SafeHandles;
 
-namespace Klak.Ndi.Interop {
-
-public enum Bandwidth
+namespace Klak.Ndi.Interop
 {
-    MetadataOnly = -10,
-    AudioOnly = 10,
-    Lowest = 0,
-    Highest = 100
-}
 
-public enum ColorFormat
-{
-    BGRX_BGRA = 0,
-    UYVY_BGRA = 1,
-    RGBX_RGBA = 2,
-    UYVY_RGBA = 3,
-    BGRX_BGRA_Flipped = 200,
-    Fastest = 100
-}
-
-public class Recv : SafeHandleZeroOrMinusOneIsInvalid
-{
-    [StructLayoutAttribute(LayoutKind.Sequential)]
-    public struct Settings 
+    public enum Bandwidth
     {
-        public Source Source;
-        public ColorFormat ColorFormat;
-        public Bandwidth Bandwidth;
-        [MarshalAsAttribute(UnmanagedType.U1)]
-        public bool AllowVideoFields;
-        public IntPtr Name;
+        MetadataOnly = -10,
+        AudioOnly = 10,
+        Lowest = 0,
+        Highest = 100
     }
 
-    #region SafeHandle implementation
-
-    Recv() : base(true) {}
-
-    protected override bool ReleaseHandle()
+    public enum ColorFormat
     {
-        _Destroy(handle);
-        return true;
+        BGRX_BGRA = 0,
+        UYVY_BGRA = 1,
+        RGBX_RGBA = 2,
+        UYVY_RGBA = 3,
+        BGRX_BGRA_Flipped = 200,
+        Fastest = 100
     }
 
-    #endregion
+    public class Recv : SafeHandleZeroOrMinusOneIsInvalid
+    {
+        [StructLayoutAttribute(LayoutKind.Sequential)]
+        public struct Settings
+        {
+            public Source Source;
+            public ColorFormat ColorFormat;
+            public Bandwidth Bandwidth;
+            [MarshalAsAttribute(UnmanagedType.U1)]
+            public bool AllowVideoFields;
+            public IntPtr Name;
+        }
 
-    #region Public methods
+        #region SafeHandle implementation
 
-    public static Recv Create(in Settings settings)
-      => _Create(settings);
+        Recv() : base(true) { }
 
-    public FrameType Capture
-      (out VideoFrame video, IntPtr audio, IntPtr metadata, uint timeout)
-      => _Capture(this, out video, audio, metadata, timeout);
+        protected override bool ReleaseHandle()
+        {
+            _Destroy(handle);
+            return true;
+        }
 
-    public void FreeVideoFrame(in VideoFrame frame)
-      => _FreeVideo(this, frame);
+        #endregion
 
-    public bool SetTally(in Tally tally)
-      => _SetTally(this, tally);
+        #region Public methods
 
-    #endregion
+        public static Recv Create(in Settings settings)
+          => _Create(settings);
 
-    #region Unmanaged interface
+        public FrameType Capture
+          (out VideoFrame video, IntPtr audio, IntPtr metadata, uint timeout)
+          => _Capture(this, out video, audio, metadata, timeout);
 
-    [DllImport(Config.DllName, EntryPoint = "NDIlib_recv_create_v3")]
-    static extern Recv _Create(in Settings Settings);
+        public void FreeVideoFrame(in VideoFrame frame)
+          => _FreeVideo(this, frame);
 
-    [DllImport(Config.DllName, EntryPoint = "NDIlib_recv_destroy")]
-    static extern void _Destroy(IntPtr recv);
+        public bool SetTally(in Tally tally)
+          => _SetTally(this, tally);
 
-    [DllImport(Config.DllName, EntryPoint = "NDIlib_recv_capture_v2")]
-    static extern FrameType _Capture(Recv recv,
-      out VideoFrame video, IntPtr audio, IntPtr metadata, uint timeout);
+        #endregion
 
-    [DllImport(Config.DllName, EntryPoint = "NDIlib_recv_free_video_v2")]
-    static extern void _FreeVideo(Recv recv, in VideoFrame data);
+        #region Unmanaged interface
 
-    [DllImport(Config.DllName, EntryPoint = "NDIlib_recv_set_tally")]
-    [return: MarshalAs(UnmanagedType.U1)]
-    static extern bool _SetTally(Recv recv, in Tally tally);
+        [DllImport(Config.DllName, EntryPoint = "NDIlib_recv_create_v3")]
+        static extern Recv _Create(in Settings Settings);
 
-    #endregion
-}
+        [DllImport(Config.DllName, EntryPoint = "NDIlib_recv_destroy")]
+        static extern void _Destroy(IntPtr recv);
+
+        [DllImport(Config.DllName, EntryPoint = "NDIlib_recv_capture_v2")]
+        static extern FrameType _Capture(Recv recv,
+          out VideoFrame video, IntPtr audio, IntPtr metadata, uint timeout);
+
+        [DllImport(Config.DllName, EntryPoint = "NDIlib_recv_free_video_v2")]
+        static extern void _FreeVideo(Recv recv, in VideoFrame data);
+
+        [DllImport(Config.DllName, EntryPoint = "NDIlib_recv_set_tally")]
+        [return: MarshalAs(UnmanagedType.U1)]
+        static extern bool _SetTally(Recv recv, in Tally tally);
+
+        #endregion
+    }
 
 }
