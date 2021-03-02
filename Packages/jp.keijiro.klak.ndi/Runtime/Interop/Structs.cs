@@ -69,4 +69,27 @@ namespace Klak.Ndi.Interop
         public bool OnPreview;
     }
 
+    [StructLayoutAttribute(LayoutKind.Sequential)]
+    public struct AudioFrame
+    {
+        public int SampleRate;
+        public int NumChannels;
+        public int NumSamples;
+        public long Timecode;
+        public IntPtr Data;
+        public int ChannelStrideInBytes;
+        public IntPtr Metadata;
+        public long Timestamp;
+    }
+
+    [StructLayoutAttribute(LayoutKind.Sequential)]
+    public struct AudioFrameInterleaved
+    {
+        public int SampleRate;
+        public int NumChannels;
+        public int NumSamples;
+        public long Timecode;
+        public IntPtr Data;
+    }
+
 }

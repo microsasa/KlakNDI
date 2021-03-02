@@ -1,11 +1,14 @@
-﻿using Unity.Collections.LowLevel.Unsafe;
+﻿using System;
+using System.Threading;
+using System.Threading.Tasks;
+using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine;
 using Marshal = System.Runtime.InteropServices.Marshal;
 
 namespace Klak.Ndi
 {
 
-    [ExecuteInEditMode]
+    //[ExecuteInEditMode]
     public sealed partial class NdiReceiver : MonoBehaviour
     {
         #region Internal objects
@@ -14,9 +17,19 @@ namespace Klak.Ndi
         FormatConverter _converter;
         MaterialPropertyBlock _override;
 
-        void PrepareInternalObjects()
+        CancellationTokenSource _tokenSource;
+        CancellationToken _cancellationToken;
+
+        void PrepareNdiReceiver()
         {
-            if (_recv == null) _recv = RecvHelper.TryCreateRecv(_ndiName);
+            lock (this)
+            {
+                if (_recv == null) _recv = RecvHelper.TryCreateRecv(_ndiName);
+            }
+        }
+
+        void PrepareOtherInternalObjects()
+        {
             if (_converter == null) _converter = new FormatConverter(_resources);
             if (_override == null) _override = new MaterialPropertyBlock();
         }
@@ -32,14 +45,34 @@ namespace Klak.Ndi
 
         #endregion
 
-        #region Receiver implementation
+        #region Video receiver implementation
 
-        RenderTexture TryReceiveFrame()
+        void ProcessVideoFrame()
         {
-            PrepareInternalObjects();
+            var rt = TryReceiveVideoFrame();
+            if (rt == null) return;
+
+            // Material property override
+            if (_targetRenderer != null)
+            {
+                _targetRenderer.GetPropertyBlock(_override);
+                _override.SetTexture(_targetMaterialProperty, rt);
+                _targetRenderer.SetPropertyBlock(_override);
+            }
+
+            // External texture update
+            if (_targetTexture != null)
+                Graphics.Blit(rt, _targetTexture);
+        }
+
+        RenderTexture TryReceiveVideoFrame()
+        {
+            PrepareNdiReceiver();
 
             // Do nothing if the recv object is not ready.
             if (_recv == null) return null;
+
+            PrepareOtherInternalObjects();
 
             // Try getting a video frame.
             var frameOrNull = RecvHelper.TryCaptureVideoFrame(_recv);
@@ -65,35 +98,84 @@ namespace Klak.Ndi
 
         #endregion
 
-        #region Component state controller
+        #region Audio receiver implementation
+
+#if DEBUG_AUDIO
+        int _audioFrameCount = 0;
+#endif
+        void ProcessAudioFrames()
+        {
+            try
+            {
+                while (!_cancellationToken.IsCancellationRequested)
+                {
+                    PrepareNdiReceiver();
+
+                    if (_recv == null)
+                    {
+                        Thread.Sleep(100);
+                        continue;
+                    }
+
+                    Interop.AudioFrame audio = new Interop.AudioFrame();
+
+                    var type = _recv.CaptureAudio(IntPtr.Zero, ref audio, IntPtr.Zero, 0);
+                    if (type == Interop.FrameType.Audio)
+                    {
+#if DEBUG_AUDIO
+                        _audioFrameCount += audio.NumSamples;
+                        if (_audioFrameCount >= audio.SampleRate)
+                        {
+                            _audioFrameCount %= audio.SampleRate;
+                            Debug.Log($"Audio frame count = {_audioFrameCount}");
+                        }
+#endif
+
+                        _recv.FreeAudioFrame(ref audio);
+                    }
+                }
+            }
+            catch (System.Exception e)
+            {
+                Debug.LogException(e);
+            }
+            finally
+            {
+                ReleaseInternalObjects();
+            }
+        }
+
+#endregion
+
+#region Component state controller
 
         internal void Restart() => ReleaseInternalObjects();
 
-        #endregion
+#endregion
 
-        #region MonoBehaviour implementation
+#region MonoBehaviour implementation
 
         void OnDisable() => ReleaseInternalObjects();
 
-        void Update()
+        private void Awake()
         {
-            var rt = TryReceiveFrame();
-            if (rt == null) return;
+            _tokenSource = new CancellationTokenSource();
+            _cancellationToken = _tokenSource.Token;
 
-            // Material property override
-            if (_targetRenderer != null)
-            {
-                _targetRenderer.GetPropertyBlock(_override);
-                _override.SetTexture(_targetMaterialProperty, rt);
-                _targetRenderer.SetPropertyBlock(_override);
-            }
-
-            // External texture update
-            if (_targetTexture != null)
-                Graphics.Blit(rt, _targetTexture);
+            Task.Run(ProcessAudioFrames);
         }
 
-        #endregion
+        void Update()
+        {
+            ProcessVideoFrame();
+        }
+
+        private void OnDestroy()
+        {
+            _tokenSource?.Cancel();
+        }
+
+#endregion
     }
 
 }

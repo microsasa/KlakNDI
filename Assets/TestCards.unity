@@ -1251,7 +1251,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2a09ab5fc64402d49b12d170a7577986, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _ndiName: (Select NDI Source)
+  _ndiName: 
   _targetTexture: {fileID: 0}
   _targetRenderer: {fileID: 1464266393}
   _targetMaterialProperty: _BaseMap

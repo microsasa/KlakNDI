@@ -30,7 +30,7 @@ namespace Klak.Ndi
         public static Interop.VideoFrame? TryCaptureVideoFrame(Interop.Recv recv)
         {
             Interop.VideoFrame video;
-            var type = recv.Capture(out video, IntPtr.Zero, IntPtr.Zero, 0);
+            var type = recv.CaptureVideo(out video, IntPtr.Zero, IntPtr.Zero, 0);
             if (type != Interop.FrameType.Video) return null;
             return (Interop.VideoFrame?)video;
         }
