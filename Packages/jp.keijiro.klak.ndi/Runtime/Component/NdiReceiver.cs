@@ -1,6 +1,8 @@
-﻿using System;
+﻿using Klak.Ndi.Interop;
+using System;
 using System.Threading;
 using System.Threading.Tasks;
+using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine;
 using Marshal = System.Runtime.InteropServices.Marshal;
@@ -13,10 +15,11 @@ namespace Klak.Ndi
     {
         #region Internal objects
 
-        Interop.Recv _recv;
+        Recv _recv;
         FormatConverter _converter;
         MaterialPropertyBlock _override;
 
+        SynchronizationContext _mainThreadContext;
         CancellationTokenSource _tokenSource;
         CancellationToken _cancellationToken;
 
@@ -100,6 +103,16 @@ namespace Klak.Ndi
 
         #region Audio receiver implementation
 
+        struct AudioBuffer
+        {
+            public float[] Buffer;
+            public int NumChannels;
+            public int SampleRate;
+            public int NumSamples;
+        }
+
+        AudioBuffer audioBuffer;
+
 #if DEBUG_AUDIO
         int _audioFrameCount = 0;
 #endif
@@ -122,6 +135,8 @@ namespace Klak.Ndi
                     var type = _recv.CaptureAudio(IntPtr.Zero, ref audio, IntPtr.Zero, 0);
                     if (type == Interop.FrameType.Audio)
                     {
+                        _mainThreadContext.Post(ProcessAudioFrame, audio);
+                        //ProcessAudioFrame(audio);
 #if DEBUG_AUDIO
                         _audioFrameCount += audio.NumSamples;
                         if (_audioFrameCount >= audio.SampleRate)
@@ -130,7 +145,6 @@ namespace Klak.Ndi
                             Debug.Log($"Audio frame count = {_audioFrameCount}");
                         }
 #endif
-
                         _recv.FreeAudioFrame(ref audio);
                     }
                 }
@@ -143,6 +157,59 @@ namespace Klak.Ndi
             {
                 ReleaseInternalObjects();
             }
+        }
+
+        void ProcessAudioFrame(System.Object data)
+        {
+            AudioFrame audioFrame = (AudioFrame)data;
+            if (_audioRenderer == null)
+            {
+                return;
+            }
+
+            if (audioBuffer.Buffer == null ||
+                audioBuffer.SampleRate != audioFrame.SampleRate ||
+                audioBuffer.NumChannels != audioFrame.NumChannels ||
+                audioBuffer.NumSamples != audioFrame.NumSamples)
+            {
+                audioBuffer.SampleRate = audioFrame.SampleRate;
+                audioBuffer.NumChannels = audioFrame.NumChannels;
+                audioBuffer.NumSamples = audioFrame.NumSamples;
+                audioBuffer.Buffer = new float[audioBuffer.NumSamples * audioBuffer.NumChannels];
+
+                _audioRenderer.SetFormat(audioFrame);
+            }
+
+            unsafe
+            {
+                int sizeInBytes = audioFrame.NumSamples * audioFrame.NumChannels * sizeof(float);
+                using (var nativeArray = new NativeArray<byte>(
+                    sizeInBytes, Allocator.TempJob, NativeArrayOptions.UninitializedMemory))
+                {
+                    AudioFrameInterleaved interleavedAudio = new AudioFrameInterleaved()
+                    {
+                        SampleRate = audioFrame.SampleRate,
+                        NumChannels = audioFrame.NumChannels,
+                        NumSamples = audioFrame.NumSamples,
+                        Timecode = audioFrame.Timecode
+                    };
+
+                    interleavedAudio.Data = (IntPtr)nativeArray.GetUnsafePtr();
+
+                    // Convert from float planar to float interleaved audio
+                    _recv.AudioFrameToInterleaved_32f_v2(ref audioFrame, ref interleavedAudio);
+
+                    var totalSamples = interleavedAudio.NumSamples * interleavedAudio.NumChannels;
+                    void* audioDataPtr = interleavedAudio.Data.ToPointer();
+
+                    for (int i = 0; i < totalSamples; i++)
+                    {
+                        audioBuffer.Buffer[i] = UnsafeUtility.ReadArrayElement<float>(audioDataPtr, i);
+                    }
+                }
+            }
+
+            _audioRenderer.PlaySamples(audioBuffer.Buffer);
         }
 
 #endregion
@@ -159,6 +226,8 @@ namespace Klak.Ndi
 
         private void Awake()
         {
+            _mainThreadContext = SynchronizationContext.Current;
+
             _tokenSource = new CancellationTokenSource();
             _cancellationToken = _tokenSource.Token;
 

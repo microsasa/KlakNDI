@@ -64,6 +64,10 @@ namespace Klak.Ndi.Interop
           (IntPtr video, ref AudioFrame audio, IntPtr metadata, uint timeout)
           => _CaptureAudio(this, video, ref audio, metadata, timeout);
 
+        public void AudioFrameToInterleaved_32f_v2
+          (ref AudioFrame source, ref AudioFrameInterleaved dest)
+          => _AudioFrameToInterleaved_32f_v2(ref source, ref dest);
+
         public void FreeAudioFrame(ref AudioFrame frame)
           => _FreeAudio(this, ref frame);
 
@@ -90,6 +94,9 @@ namespace Klak.Ndi.Interop
         [DllImport(Config.DllName, EntryPoint = "NDIlib_recv_capture_v2")]
         static extern FrameType _CaptureAudio(Recv recv,
           IntPtr video, ref AudioFrame audio, IntPtr metadata, uint timeout);
+
+        [DllImport(Config.DllName, EntryPoint = "NDIlib_util_audio_to_interleaved_32f_v2")]
+        static extern void _AudioFrameToInterleaved_32f_v2(ref AudioFrame src, ref AudioFrameInterleaved dst);
 
         [DllImport(Config.DllName, EntryPoint = "NDIlib_recv_free_audio_v2")]
         static extern void _FreeAudio(Recv recv, ref AudioFrame data);

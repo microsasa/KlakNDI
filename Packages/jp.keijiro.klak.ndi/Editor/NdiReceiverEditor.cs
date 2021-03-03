@@ -12,6 +12,7 @@ namespace Klak.Ndi.Editor
         SerializedProperty _targetTexture;
         SerializedProperty _targetRenderer;
         SerializedProperty _targetMaterialProperty;
+        SerializedProperty _audioRenderer;
 
         static class Styles
         {
@@ -63,6 +64,7 @@ namespace Klak.Ndi.Editor
             _targetTexture = finder["_targetTexture"];
             _targetRenderer = finder["_targetRenderer"];
             _targetMaterialProperty = finder["_targetMaterialProperty"];
+            _audioRenderer = finder["_audioRenderer"];
         }
 
         public override void OnInspectorGUI()
@@ -103,6 +105,8 @@ namespace Klak.Ndi.Editor
             }
 
             EditorGUI.indentLevel--;
+
+            EditorGUILayout.PropertyField(_audioRenderer);
 
             serializedObject.ApplyModifiedProperties();
 

@@ -43,6 +43,14 @@ namespace Klak.Ndi
             set => _targetMaterialProperty = value;
         }
 
+        public NdiAudioRenderer audioRenderer
+        {
+            get => _audioRenderer;
+            set => _audioRenderer = value;
+        }
+
+        [SerializeField] NdiAudioRenderer _audioRenderer = null;
+
         #endregion
 
         #region Runtime property
