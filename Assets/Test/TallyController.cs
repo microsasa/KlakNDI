@@ -15,7 +15,10 @@ class TallyController : MonoBehaviour
         var recv = _receiver.internalRecvObject;
         if (recv == null || recv.IsInvalid || recv.IsClosed) return;
 
-        recv.SetTally(new Tally { OnProgram = _onProgram,
-                                  OnPreview = _onPreview });
+        recv.SetTally(new Tally
+        {
+            OnProgram = _onProgram,
+            OnPreview = _onPreview
+        });
     }
 }

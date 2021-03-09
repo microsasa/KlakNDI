@@ -4,7 +4,7 @@ using UnityEditorInternal;
 
 namespace Klak.Ndi.Editor
 {
-    #if DONT_COMPILE_THIS
+#if DONT_COMPILE_THIS
 
     static class NdiResourcesEditor
     {
@@ -16,5 +16,5 @@ namespace Klak.Ndi.Editor
         }
     }
 
-    #endif
+#endif
 }

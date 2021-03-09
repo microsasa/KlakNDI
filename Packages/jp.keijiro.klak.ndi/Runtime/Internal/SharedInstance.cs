@@ -1,76 +1,77 @@
-namespace Klak.Ndi {
-
-static class SharedInstance
+namespace Klak.Ndi
 {
-    #region Public properties
 
-    static public Interop.Find Find
-      => _find ?? InitializeFind();
-
-    static public Interop.Send GameViewSend
-      => _gameViewSend ?? InitializeGameViewSend();
-
-    static public bool IsGameViewSend(Interop.Send send)
-      => send == _gameViewSend;
-
-    #endregion
-
-    #region Shared object implementation
-
-    static Interop.Find _find;
-
-    static Interop.Find InitializeFind()
+    static class SharedInstance
     {
-        _find = Interop.Find.Create();
-        SetFinalizer();
-        return _find;
-    }
+        #region Public properties
 
-    static Interop.Send _gameViewSend;
+        static public Interop.Find Find
+          => _find ?? InitializeFind();
 
-    static Interop.Send InitializeGameViewSend()
-    {
-        _gameViewSend = Interop.Send.Create("Game View");
-        SetFinalizer();
-        return _gameViewSend;
-    }
+        static public Interop.Send GameViewSend
+          => _gameViewSend ?? InitializeGameViewSend();
 
-    #endregion
+        static public bool IsGameViewSend(Interop.Send send)
+          => send == _gameViewSend;
 
-    #region Finalizer implementatioin
+        #endregion
 
-    //
-    // We have to clean up the shared objects on a domain reload that only
-    // happens on Editor, so we do nothing on Player.
-    //
+        #region Shared object implementation
 
-    #if UNITY_EDITOR
+        static Interop.Find _find;
 
-    static bool _finalizerReady;
+        static Interop.Find InitializeFind()
+        {
+            _find = Interop.Find.Create();
+            SetFinalizer();
+            return _find;
+        }
 
-    static void SetFinalizer()
-    {
-        if (_finalizerReady) return;
-        UnityEditor.AssemblyReloadEvents.beforeAssemblyReload += OnDomainReload;
-        _finalizerReady = true;
-    }
+        static Interop.Send _gameViewSend;
 
-    static void OnDomainReload()
-    {
-        _find?.Dispose();
-        _find = null;
+        static Interop.Send InitializeGameViewSend()
+        {
+            _gameViewSend = Interop.Send.Create("Game View");
+            SetFinalizer();
+            return _gameViewSend;
+        }
 
-        _gameViewSend?.Dispose();
-        _gameViewSend = null;
-    }
+        #endregion
 
-    #else
+        #region Finalizer implementatioin
+
+        //
+        // We have to clean up the shared objects on a domain reload that only
+        // happens on Editor, so we do nothing on Player.
+        //
+
+#if UNITY_EDITOR
+
+        static bool _finalizerReady;
+
+        static void SetFinalizer()
+        {
+            if (_finalizerReady) return;
+            UnityEditor.AssemblyReloadEvents.beforeAssemblyReload += OnDomainReload;
+            _finalizerReady = true;
+        }
+
+        static void OnDomainReload()
+        {
+            _find?.Dispose();
+            _find = null;
+
+            _gameViewSend?.Dispose();
+            _gameViewSend = null;
+        }
+
+#else
 
     static void SetFinalizer() {}
 
-    #endif
+#endif
 
-    #endregion
-}
+        #endregion
+    }
 
 }

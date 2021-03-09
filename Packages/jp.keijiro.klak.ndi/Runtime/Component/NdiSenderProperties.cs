@@ -1,65 +1,76 @@
 using UnityEngine;
 
-namespace Klak.Ndi {
-
-public enum CaptureMethod { GameView, Camera, Texture }
-
-public sealed partial class NdiSender : MonoBehaviour
+namespace Klak.Ndi
 {
-    #region NDI source settings
 
-    [SerializeField] string _ndiName = "NDI Sender";
+    public enum CaptureMethod { GameView, Camera, Texture }
 
-    public string ndiName
-      { get => _ndiName;
-        set { _ndiName = value; Restart(); } }
+    public sealed partial class NdiSender : MonoBehaviour
+    {
+        #region NDI source settings
 
-    [SerializeField] bool _enableAlpha = false;
+        [SerializeField] string _ndiName = "NDI Sender";
 
-    public bool enableAlpha
-      { get => _enableAlpha;
-        set => _enableAlpha = value; }
+        public string ndiName
+        {
+            get => _ndiName;
+            set { _ndiName = value; Restart(); }
+        }
 
-    #endregion
+        [SerializeField] bool _enableAlpha = false;
 
-    #region Capture target settings
+        public bool enableAlpha
+        {
+            get => _enableAlpha;
+            set => _enableAlpha = value;
+        }
 
-    [SerializeField] CaptureMethod _captureMethod = CaptureMethod.GameView;
+        #endregion
 
-    public CaptureMethod captureMethod
-      { get => _captureMethod;
-        set { _captureMethod = value; Restart(); } }
+        #region Capture target settings
 
-    [SerializeField] Camera _sourceCamera = null;
+        [SerializeField] CaptureMethod _captureMethod = CaptureMethod.GameView;
 
-    public Camera sourceCamera
-      { get => _sourceCamera;
-        set { _sourceCamera = value; ResetState(); } }
+        public CaptureMethod captureMethod
+        {
+            get => _captureMethod;
+            set { _captureMethod = value; Restart(); }
+        }
 
-    [SerializeField] Texture _sourceTexture = null;
+        [SerializeField] Camera _sourceCamera = null;
 
-    public Texture sourceTexture
-      { get => _sourceTexture;
-        set => _sourceTexture = value; }
+        public Camera sourceCamera
+        {
+            get => _sourceCamera;
+            set { _sourceCamera = value; ResetState(); }
+        }
 
-    #endregion
+        [SerializeField] Texture _sourceTexture = null;
 
-    #region Runtime property
+        public Texture sourceTexture
+        {
+            get => _sourceTexture;
+            set => _sourceTexture = value;
+        }
 
-    public string metadata { get; set; }
+        #endregion
 
-    public Interop.Send internalSendObject => _send;
+        #region Runtime property
 
-    #endregion
+        public string metadata { get; set; }
 
-    #region Resources asset reference
+        public Interop.Send internalSendObject => _send;
 
-    [SerializeField, HideInInspector] NdiResources _resources = null;
+        #endregion
 
-    public void SetResources(NdiResources resources)
-      => _resources = resources;
+        #region Resources asset reference
 
-    #endregion
-}
+        [SerializeField, HideInInspector] NdiResources _resources = null;
+
+        public void SetResources(NdiResources resources)
+          => _resources = resources;
+
+        #endregion
+    }
 
 }

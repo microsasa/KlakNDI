@@ -1,59 +1,76 @@
 using UnityEngine;
 
-namespace Klak.Ndi {
-
-public sealed partial class NdiReceiver : MonoBehaviour
+namespace Klak.Ndi
 {
-    #region NDI source settings
 
-    [SerializeField] string _ndiName = null;
+    public sealed partial class NdiReceiver : MonoBehaviour
+    {
+        #region NDI source settings
 
-    public string ndiName
-      { get => _ndiName;
-        set { _ndiName = value; Restart(); } }
+        [SerializeField] string _ndiName = null;
 
-    #endregion
+        public string ndiName
+        {
+            get => _ndiName;
+            set { _ndiName = value; Restart(); }
+        }
 
-    #region Target settings
+        #endregion
 
-    [SerializeField] RenderTexture _targetTexture = null;
+        #region Target settings
 
-    public RenderTexture targetTexture
-      { get => _targetTexture;
-        set => _targetTexture = value; }
+        [SerializeField] RenderTexture _targetTexture = null;
 
-    [SerializeField] Renderer _targetRenderer = null;
+        public RenderTexture targetTexture
+        {
+            get => _targetTexture;
+            set => _targetTexture = value;
+        }
 
-    public Renderer targetRenderer
-      { get => _targetRenderer;
-        set => _targetRenderer = value; }
+        [SerializeField] Renderer _targetRenderer = null;
 
-    [SerializeField] string _targetMaterialProperty = null;
+        public Renderer targetRenderer
+        {
+            get => _targetRenderer;
+            set => _targetRenderer = value;
+        }
 
-    public string targetMaterialProperty
-      { get => _targetMaterialProperty;
-        set => _targetMaterialProperty = value; }
+        [SerializeField] string _targetMaterialProperty = null;
 
-    #endregion
+        public string targetMaterialProperty
+        {
+            get => _targetMaterialProperty;
+            set => _targetMaterialProperty = value;
+        }
 
-    #region Runtime property
+        public NdiAudioRenderer audioRenderer
+        {
+            get => _audioRenderer;
+            set => _audioRenderer = value;
+        }
 
-    public RenderTexture texture => _converter?.LastDecoderOutput;
+        [SerializeField] NdiAudioRenderer _audioRenderer = null;
 
-    public string metadata { get; set; }
+        #endregion
 
-    public Interop.Recv internalRecvObject => _recv;
+        #region Runtime property
 
-    #endregion
+        public RenderTexture texture => _converter?.LastDecoderOutput;
 
-    #region Resources asset reference
+        public string metadata { get; set; }
 
-    [SerializeField, HideInInspector] NdiResources _resources = null;
+        public Interop.Recv internalRecvObject => _recv;
 
-    public void SetResources(NdiResources resources)
-      => _resources = resources;
+        #endregion
 
-    #endregion
-}
+        #region Resources asset reference
+
+        [SerializeField, HideInInspector] NdiResources _resources = null;
+
+        public void SetResources(NdiResources resources)
+          => _resources = resources;
+
+        #endregion
+    }
 
 }

@@ -1,18 +1,19 @@
 using System.Collections.Generic;
 
-namespace Klak.Ndi {
-
-public static class NdiFinder
+namespace Klak.Ndi
 {
-    public static IEnumerable<string> sourceNames => EnumerateSourceNames();
 
-    public static IEnumerable<string> EnumerateSourceNames()
+    public static class NdiFinder
     {
-        var list = new List<string>();
-        foreach (var source in SharedInstance.Find.CurrentSources)
-            list.Add(source.NdiName);
-        return list;
+        public static IEnumerable<string> sourceNames => EnumerateSourceNames();
+
+        public static IEnumerable<string> EnumerateSourceNames()
+        {
+            var list = new List<string>();
+            foreach (var source in SharedInstance.Find.CurrentSources)
+                list.Add(source.NdiName);
+            return list;
+        }
     }
-}
 
 }
