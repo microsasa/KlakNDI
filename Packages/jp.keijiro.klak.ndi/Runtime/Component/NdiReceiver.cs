@@ -9,7 +9,6 @@ using Marshal = System.Runtime.InteropServices.Marshal;
 
 namespace Klak.Ndi
 {
-
     //[ExecuteInEditMode]
     public sealed partial class NdiReceiver : MonoBehaviour
     {
@@ -19,26 +18,30 @@ namespace Klak.Ndi
         FormatConverter _converter;
         MaterialPropertyBlock _override;
 
+        bool _audioRunning = false;
         SynchronizationContext _mainThreadContext;
         CancellationTokenSource _tokenSource;
         CancellationToken _cancellationToken;
 
-        void PrepareNdiReceiver()
+        void PrepareInternalObjects()
         {
-            lock (this)
-            {
-                if (_recv == null) _recv = RecvHelper.TryCreateRecv(_ndiName);
-            }
-        }
-
-        void PrepareOtherInternalObjects()
-        {
+            if (_recv == null) _recv = RecvHelper.TryCreateRecv(_ndiName);
             if (_converter == null) _converter = new FormatConverter(_resources);
             if (_override == null) _override = new MaterialPropertyBlock();
         }
 
         void ReleaseInternalObjects()
         {
+            if (_audioRunning)
+            {
+                _audioRenderer.StopPlaying();
+                _tokenSource.Cancel();
+                while (_audioRunning)
+                {
+                    Thread.Sleep(5);
+                }
+            }
+
             _recv?.Dispose();
             _recv = null;
 
@@ -70,13 +73,6 @@ namespace Klak.Ndi
 
         RenderTexture TryReceiveVideoFrame()
         {
-            PrepareNdiReceiver();
-
-            // Do nothing if the recv object is not ready.
-            if (_recv == null) return null;
-
-            PrepareOtherInternalObjects();
-
             // Try getting a video frame.
             var frameOrNull = RecvHelper.TryCaptureVideoFrame(_recv);
             if (frameOrNull == null) return null;
@@ -113,38 +109,18 @@ namespace Klak.Ndi
 
         AudioBuffer audioBuffer;
 
-#if DEBUG_AUDIO
-        int _audioFrameCount = 0;
-#endif
         void ProcessAudioFrames()
         {
             try
             {
                 while (!_cancellationToken.IsCancellationRequested)
                 {
-                    PrepareNdiReceiver();
-
-                    if (_recv == null)
-                    {
-                        Thread.Sleep(100);
-                        continue;
-                    }
-
                     Interop.AudioFrame audio = new Interop.AudioFrame();
 
                     var type = _recv.CaptureAudio(IntPtr.Zero, ref audio, IntPtr.Zero, 0);
                     if (type == Interop.FrameType.Audio)
                     {
                         _mainThreadContext.Post(ProcessAudioFrame, audio);
-                        //ProcessAudioFrame(audio);
-#if DEBUG_AUDIO
-                        _audioFrameCount += audio.NumSamples;
-                        if (_audioFrameCount >= audio.SampleRate)
-                        {
-                            _audioFrameCount %= audio.SampleRate;
-                            Debug.Log($"Audio frame count = {_audioFrameCount}");
-                        }
-#endif
                         _recv.FreeAudioFrame(ref audio);
                     }
                 }
@@ -155,7 +131,7 @@ namespace Klak.Ndi
             }
             finally
             {
-                ReleaseInternalObjects();
+                _audioRunning = false;
             }
         }
 
@@ -224,25 +200,28 @@ namespace Klak.Ndi
 
         void OnDisable() => ReleaseInternalObjects();
 
-        private void Awake()
-        {
-            _mainThreadContext = SynchronizationContext.Current;
-
-            _tokenSource = new CancellationTokenSource();
-            _cancellationToken = _tokenSource.Token;
-
-            Task.Run(ProcessAudioFrames);
-        }
-
         void Update()
         {
-            ProcessVideoFrame();
+            PrepareInternalObjects();
+
+            if (_recv != null)
+            {
+                ProcessVideoFrame();
+
+                if (!_audioRunning)
+                {
+                    _mainThreadContext = SynchronizationContext.Current;
+
+                    _tokenSource = new CancellationTokenSource();
+                    _cancellationToken = _tokenSource.Token;
+
+                    _audioRunning = true;
+                    Task.Run(ProcessAudioFrames);
+                }
+            }
         }
 
-        private void OnDestroy()
-        {
-            _tokenSource?.Cancel();
-        }
+         void OnDestroy() => ReleaseInternalObjects();
 
 #endregion
     }
