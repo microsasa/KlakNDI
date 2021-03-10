@@ -1,0 +1,30 @@
+{
+    "author": "Keijiro Takahashi (original), Sasa Junuzovic (audio receiver)",
+    "scopedRegistries": [
+      {
+        "name": "Unity NuGet",
+        "url": "https://unitynuget-registry.azurewebsites.net",
+        "scopes": [
+          "org.nuget"
+        ]
+      }
+    ],    
+    "dependencies": {
+      "com.unity.modules.screencapture": "1.0.0",
+      "org.nuget.system.memory": "4.5.3",
+      "com.unity.render-pipelines.universal": "7.5.1",
+      "com.unity.modules.animation": "1.0.0",
+      "com.unity.modules.audio": "1.0.0",
+      "com.unity.modules.physics": "1.0.0",
+      "com.unity.modules.physics2d": "1.0.0",
+      "com.unity.modules.uielements": "1.0.0"
+    },
+    "description": "NewTek NDI® plugin for Unity (with audio receiver)",
+    "displayName": "KlakNDI",
+    "keywords": [ "unity" ],
+    "license": "SEE LICENSE IN LICENSE",
+    "name": "jp.keijiro.klak.ndi",
+    "unity": "2019.4",
+    "unityRelease": "0f1",
+    "version": "2.0.0"
+}
