@@ -9,6 +9,10 @@ using Marshal = System.Runtime.InteropServices.Marshal;
 
 namespace Klak.Ndi
 {
+    // Todo: consider grabbing video and audio frames on the same thread instead of using the Unity's update loop for
+    // video and a separate thread for audio.
+    // See: https://dev.azure.com/msresearch/Malta/_workitems/edit/138412
+
     //[ExecuteInEditMode]
     public sealed partial class NdiReceiver : MonoBehaviour
     {
@@ -34,7 +38,11 @@ namespace Klak.Ndi
         {
             if (_audioRunning)
             {
-                _audioRenderer.StopPlaying();
+                if (_audioRenderer != null)
+                {
+                    _audioRenderer.StopPlaying();
+                }
+
                 _tokenSource.Cancel();
                 while (_audioRunning)
                 {
@@ -137,12 +145,12 @@ namespace Klak.Ndi
 
         void ProcessAudioFrame(System.Object data)
         {
-            AudioFrame audioFrame = (AudioFrame)data;
             if (_audioRenderer == null)
             {
                 return;
             }
 
+            AudioFrame audioFrame = (AudioFrame)data;
             if (audioBuffer.Buffer == null ||
                 audioBuffer.SampleRate != audioFrame.SampleRate ||
                 audioBuffer.NumChannels != audioFrame.NumChannels ||
@@ -190,13 +198,13 @@ namespace Klak.Ndi
 
 #endregion
 
-#region Component state controller
+        #region Component state controller
 
         internal void Restart() => ReleaseInternalObjects();
 
-#endregion
+        #endregion
 
-#region MonoBehaviour implementation
+        #region MonoBehaviour implementation
 
         void OnDisable() => ReleaseInternalObjects();
 
@@ -223,7 +231,7 @@ namespace Klak.Ndi
 
          void OnDestroy() => ReleaseInternalObjects();
 
-#endregion
+        #endregion
     }
 
 }
